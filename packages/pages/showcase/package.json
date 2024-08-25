@@ -1,5 +1,5 @@
 {
-  "name": "@papit/page-showcase",
+  "name": "@/page-showcase",
   "version": "0.0.0",
   "scripts": {
     "build:sass": "bash ./bin/_utils/sass.sh",
@@ -34,7 +34,7 @@
   "license": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Henry/web-components.git"
+    "url": ".git"
   },
   "dependencies": {
     "@papit/core": "0.0.1",
