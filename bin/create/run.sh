@@ -9,7 +9,11 @@ loadcolors
 
 # extract project-scope variable 
 PROJECTSCOPE=$(node -pe "require('$ROOTDIR/package.json').name")
-read -r PROJECTSCOPE GITHUB_REPO <<< $(node -pe "let pkg=require('$ROOTDIR/package.json'); pkg.name + ' ' + (pkg.repository?.url || 'unknown')")https://github.com/onkelhoy/web-components
+read -r PROJECTSCOPE GITHUB_REPO <<< $(node -pe "
+  const pkg = require('$ROOTDIR/package.json'); 
+  const repo = pkg.repository?.url || 'unknown'
+  \`\${pkg.name} \${repo}\`
+")
 
 if [[ $GITHUB_REPO != "unknown" ]]; then 
   export GITHUB_REPO=${GITHUB_REPO%.git}
