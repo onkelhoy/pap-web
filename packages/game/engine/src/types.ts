@@ -8,7 +8,7 @@ export type BaseSetting = {
   timer: null|number;
   previous: null|number;
   callbacks: SettingCallback[];
-  documentElemenet: Document|HTMLElement|ShadowRoot;
+  documentElement: Document|HTMLElement|ShadowRoot;
 }
 export type StandardSetting = BaseSetting & {
   type: "2d"
@@ -43,7 +43,7 @@ export type StandardInfo = BaseInfo & {
 type GLInfo = BaseInfo & {
   type: "webgl";
   context: WebGLRenderingContext|WebGL2RenderingContext;
-  materials: Map<string, WebGLProgram>;
+  programs: Map<string, WebGLProgram>;
 }
 
 export type InfoType = StandardInfo | GLInfo;
