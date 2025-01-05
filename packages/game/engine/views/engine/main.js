@@ -1,10 +1,14 @@
 // component
-import { Engine, InputEvents } from '@papit/game-engine';
+import { Engine } from '@papit/game-engine';
+import { InputEvents } from "@papit/game-input-events";
 
 let engine, events;
 
 window.onload = () => {
-  engine = new Engine("canvas");
+  engine = new Engine({
+    query: "canvas",
+
+  })
   events = new InputEvents(engine.canvas, { mouse: { pointerlock: false } });
 
   events.on("mouse-up", handlemouseup);
