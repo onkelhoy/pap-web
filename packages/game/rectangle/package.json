@@ -1,7 +1,7 @@
 {
   "name": "@papit/game-rectangle",
   "description": "",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "build": "bash ./bin/build.sh",
     "watch": "bash ./bin/watch.sh",
@@ -34,7 +34,7 @@
     "url": "https://github.com/onkelhoy/web-components.git"
   },
   "dependencies": {
-    "@papit/game-vector": "*"
+    "@papit/game-vector": "0.0.1"
   },
   "devDependencies": {
     "@papit/codeblock": "^0.0.0",

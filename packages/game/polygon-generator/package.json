@@ -1,7 +1,7 @@
 {
   "name": "@papit/game-polygon-generator",
   "description": "",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "build": "bash ./bin/build.sh",
     "watch": "bash ./bin/watch.sh",
@@ -49,9 +49,9 @@
     "typescript"
   ],
   "dependencies": {
-    "@papit/game-intersection": "^0.0.0",
-    "@papit/game-polygon": "^0.0.0",
+    "@papit/game-intersection": "0.0.1",
+    "@papit/game-polygon": "0.0.1",
     "@papit/game-shape": "^0.0.0",
-    "@papit/game-vector": "^0.0.0"
+    "@papit/game-vector": "0.0.1"
   }
 }

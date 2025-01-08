@@ -37,11 +37,11 @@
     "@papit/codeblock": "^*",
     "@papit/game-engine": "^*",
     "@papit/game-input-events": "^*",
-    "@papit/game-vector": "^*",
+    "@papit/game-vector": "^0.0.1",
+    "chokidar": "^3.6.0",
     "esbuild": "^0.17.18",
-    "typescript": "^5.7.2",
     "node-html-parser": "^6.1.11",
-    "chokidar": "^3.6.0"
+    "typescript": "^5.7.2"
   },
   "keywords": [
     "game",
