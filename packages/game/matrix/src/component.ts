@@ -3,15 +3,70 @@
 import { Vector, Vector3Object, VectorObject } from "@papit/game-vector";
 
 export class Matrix {
+  col: number;
+  row: number;
+  
+  // Getters and Setters 
   private _data: number[] = [];
   get data() {
     return this._data;
   }
   set data(value:number[]) {
     if (this.row * this.col !== value.length) throw new Error("[matrix] error: dimensions do not match the supplied data");
+
+    this._identity = null;
+    this._determinant = null;
+    this._inverse  = null;
+    this._data = value;
   }
-  col: number;
-  row: number;
+
+  private _determinant:number|null = null;
+  get determinant() {
+    if (this._determinant === null) {
+      if (this.row !== this.col) throw new Error("[matrix] error: dimensions must be the same");
+      this._determinant = 0;
+
+      // implementing the diagonal approach 
+      
+      for (let d=0; d<2; d++) { 
+        let dir = d * 2 - 1;
+        for (let i=0; i<this.row; i++) {
+          let sum = 1;
+        for (let j=0; j<this.row; j++) {
+          const r = j;
+          let c = (this.row + i + j) % this.row;
+          if (d === 0) c = this.row - c - 1;
+          sum *= this.get(r, c);
+        }
+
+        this._determinant += sum * dir;
+      }}
+    }
+
+    return this._determinant;
+  }
+
+  private _identity:Matrix|null = null;
+  get identity() {
+    if (this._identity === null) {
+      if (this.row !== this.col) throw new Error("[matrix] error: dimensions must be the same");
+      this._identity = Matrix.Identity(this.row);
+    }
+
+    return this._identity;
+  }
+
+  private _inverse:Matrix|null = null;
+  get inverse() {
+    if (this._inverse === null)
+    {
+      if (this.row !== this.col) throw new Error("[matrix] error: dimensions must be the same");
+      this._inverse = this.copy();
+
+      // implementing the PLU algorithm 
+    }
+    return this._inverse;
+  }
 
   constructor(data: number[], row:number, col:number) {
     this.row = row;
@@ -112,6 +167,17 @@ export class m3 extends Matrix {
     super(data, 3, 3);
   }
 
+  translate(tx:number, ty:number) {
+    return this.multiply(m3.translation(tx, ty));
+  }
+  rotate(angleInRadians:number) {
+    return this.multiply(m3.rotation(angleInRadians));
+  }
+  scale(sx:number, sy:number) {
+    return this.multiply(m3.scaling(sx, sy));
+  }
+
+  // static methods
   static translation(x: number, y: number) {
     return new m3([
       1, 0, 0,
@@ -151,16 +217,6 @@ export class m3 extends Matrix {
       0, 0, 1,
     ]);
   }
-
-  translate(tx:number, ty:number) {
-    return this.multiply(m3.translation(tx, ty));
-  }
-  rotate(angleInRadians:number) {
-    return this.multiply(m3.rotation(angleInRadians));
-  }
-  scale(sx:number, sy:number) {
-    return this.multiply(m3.scaling(sx, sy));
-  }
 }
 
 // CRED: https://webgl2fundamentals.org/webgl/lessons/webgl-3d-orthographic.html
@@ -169,6 +225,23 @@ export class m4 extends Matrix {
     super(data, 4, 4);
   }
 
+  translate(tx:number, ty:number, tz:number) {
+    return this.multiply(m4.translation(tx, ty, tz));
+  }
+  xRotate(angleInRadians:number) {
+    return this.multiply(m4.xRotation(angleInRadians));
+  }
+  yRotate(angleInRadians:number) {
+    return this.multiply(m4.yRotation(angleInRadians));
+  }
+  zRotate(angleInRadians:number) {
+    return this.multiply(m4.zRotation(angleInRadians));
+  }
+  scale(sx:number, sy:number, sz:number) {
+    return this.multiply(m4.scaling(sx, sy, sz));
+  }
+
+  // static methods
   static translation(tx:number, ty:number, tz:number) {
     return new m4([
        1,  0,  0,  0,
@@ -272,21 +345,5 @@ export class m4 extends Matrix {
       0, 0, 1, 0,
       0, 0, 0, 1,
     ]);
-  }
-
-  translate(tx:number, ty:number, tz:number) {
-    return this.multiply(m4.translation(tx, ty, tz));
-  }
-  xRotate(angleInRadians:number) {
-    return this.multiply(m4.xRotation(angleInRadians));
-  }
-  yRotate(angleInRadians:number) {
-    return this.multiply(m4.yRotation(angleInRadians));
-  }
-  zRotate(angleInRadians:number) {
-    return this.multiply(m4.zRotation(angleInRadians));
-  }
-  scale(sx:number, sy:number, sz:number) {
-    return this.multiply(m4.scaling(sx, sy, sz));
   }
 }
