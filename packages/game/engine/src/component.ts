@@ -119,6 +119,48 @@ export class Engine {
 
       this.info.push(info);
     }
+
+    // this proxy will try to serve based on query 
+    // example, passing as selector "canvas#background" the engine can now serve 
+    // engine.background.ctx 
+    return new Proxy(this, {
+      get: (target, propertyKey) => {
+        if (Reflect.has(target, propertyKey)) return Reflect.get(target, propertyKey);
+
+        if (typeof propertyKey !== "string") return;
+
+        const regexp = new RegExp(propertyKey, "i");
+        for (let i=0; i<target.info.length; i++)
+        {
+          const info = target.info[i];
+          if (!regexp.test(info.setting.query)) continue;
+          
+          // we return another proxy based on the found info 
+          // so if we call like in our example above with ".ctx" we can now also serve the ctx 
+          return new Proxy(info, {
+            get: (target, propertyKey) => {
+              if (Reflect.has(target, propertyKey)) return Reflect.get(target, propertyKey);
+
+              // not something from base info object we might try to serve the standards 
+              switch (propertyKey) {
+                case "canvas":
+                case "element":
+                  return this.getCanvas(i);
+                case "setting":
+                  return this.getSetting(i);
+                case "context":
+                case "ctx":
+                  return this.getContext(i);
+                case "gl":
+                  return this.getContext<WebGL2RenderingContext>(i);
+                case "gl1":
+                  return this.getContext<WebGLRenderingContext>(i);
+              }
+            }
+          });
+        }
+      }
+    })
   }
 
   // resize 
