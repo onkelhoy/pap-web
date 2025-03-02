@@ -5,7 +5,7 @@ import { InputEvents } from "@papit/game-input-events";
 // component
 import '@papit/game-polygon';
 
-let engine, events;
+let engine, events, polygon;
 
 window.onload = () => {
   engine = new Engine("canvas");

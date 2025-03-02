@@ -1,7 +1,9 @@
 import {Vector, VectorObject} from "@papit/game-vector";
-import {Triangulate} from "./components/triangulate";
-// import { Shape } from "@papit/game-shape";
+import { debounce } from "@papit/core";
 
+// local
+import {Triangulate} from "./components/triangulate";
+import { Generate } from "./components/moore"
 export class Polygon {
 
   static instances = 0;
@@ -25,6 +27,8 @@ export class Polygon {
     {
       this.recalculate();
     }
+
+    this.debouncedmove = debounce(this.move, 50);
   }
 
   get boundary() {
@@ -73,12 +77,41 @@ export class Polygon {
     return this.centeroffset.Add(this.verticies[0]);
   }
 
-  private debouncedmove(x:number|VectorObject, y?:number) {
-    
-  }
+  private debouncedmove(x:number|VectorObject, y?:number) { }
 
   move(x:number|VectorObject, y?:number) {
-    
+    const pos = Vector.toVector(x, y);
+    const center = this.center;
+    const d = pos.Sub(center);
+
+    for (let v of this.verticies)
+    {
+      v.x += d.x;
+      v.y += d.y;
+    }
+  }
+
+  add(x:number|VectorObject, y?:number) {
+    const pos = Vector.toVector(x, y);
+    for (let v of this.verticies)
+    {
+      v.x += pos.x;
+      v.y += pos.y;
+    }
+  }
+
+  scale(factor:number) {
+    const center = this.center;
+    for (let v of this.verticies)
+    {
+      const delta = center.Sub(v);
+      const mag = delta.magnitude;
+      const angle = delta.angle;
+      const d = mag * factor;
+
+      v.x = center.x + Math.cos(angle) * d;
+      v.y = center.y + Math.sin(angle) * d;
+    }
   }
 
   recalculate() {
@@ -113,7 +146,7 @@ export class Polygon {
       // vector BC : current to next
       const BC = Vector.Subtract(this.verticies[next], v);
 
-      const crossproduct = Vector.Cross(AB, BC);
+      const crossproduct = Vector.Cross(AB, BC).z;
 
       if (crossproduct > 0)
       {
@@ -134,6 +167,8 @@ export class Polygon {
         // continue to next iteration 
         continue;
       }
+      
+      if (this.verticies.length === 0) return;
 
       // add each vertex
       this.centeroffset.add(v);
@@ -160,6 +195,8 @@ export class Polygon {
         maxyindex = i;
       }
     }
+
+    if (this.verticies.length === 0) return;
     
     // set the boundary 
     this.boundaryindex = [minxindex, minyindex, maxxindex, maxyindex];
@@ -175,7 +212,7 @@ export class Polygon {
     this.concave = convex > 0 && concave > 0;
 
     // set the center to median of verticies 
-    this.centeroffset.divide(this.verticies.length);
+    this.centeroffset.divide(this.verticies.length||1);
     this.centeroffset.sub(this.verticies[0]);
 
     // call triangulation
@@ -264,5 +301,9 @@ export class Polygon {
         ctx.closePath();
       }
     }
+  }
+
+  static Moore (ctx:CanvasRenderingContext2D, width:number, height: number, noholes = true) {
+    return Generate(ctx, width, height);
   }
 }

@@ -29,7 +29,7 @@ export function Triangulate(polygon:SimplePolygonObject) {
       const va_to_vc = Vector.Subtract(vc, va);
 
       // check if convex
-      if (Vector.Cross(va_to_vb, va_to_vc) > 0)
+      if (Vector.Cross(va_to_vb, va_to_vc).z > 0)
       {
         console.log('convex');
         continue;
