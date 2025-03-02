@@ -18,6 +18,20 @@ export class Vector implements VectorObject {
       this.y = y;
       this.z = z;
     }
+
+    return new Proxy(this, {
+      get: (target, propertyKey) => {
+        if (Reflect.has(target, propertyKey)) return Reflect.get(target, propertyKey);
+
+        if (typeof propertyKey !== "string") return;
+        if (!/[^xyz]/i.test(propertyKey)) return;
+        if (propertyKey.length > 3) return;
+        
+        // else we imagine something like xyz and we can support.. (wasp?? no but the thing shaders has!)
+        const values = propertyKey.toLowerCase().split("").map(xyz => Number(Reflect.get(target, xyz)||0));
+        return new Vector(values[0], values[1], values[2]);
+      }
+    });
   }
 
   get magnitude() {
@@ -46,8 +60,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns Vector
    */
-  set(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  set(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     this.x = vv.x;
     this.y = vv.y;
     this.z = vv.z;
@@ -61,8 +78,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns Vector
    */
-  add(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  add(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     this.x += vv.x;
     this.y += vv.y;
     this.z += vv.z;
@@ -76,8 +96,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns Vector
    */
-  sub(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  sub(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     this.x -= vv.x;
     this.y -= vv.y;
     this.z -= vv.z;
@@ -91,8 +114,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns Vector
    */
-  divide(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  divide(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     this.x /= vv.x;
     this.y /= vv.y;
     this.z /= vv.z;
@@ -106,8 +132,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns Vector
    */
-  mul(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  mul(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     this.x *= vv.x;
     this.y *= vv.y;
     this.z *= vv.z;
@@ -123,8 +152,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns new Vector
    */
-  Add(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  Add(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     const copy = Vector.Copy(this);
     copy.x += vv.x;
     copy.y += vv.y;
@@ -139,8 +171,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns new Vector
    */
-  Sub(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  Sub(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     const copy = Vector.Copy(this);
     copy.x -= vv.x;
     copy.y -= vv.y;
@@ -155,8 +190,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns new Vector
    */
-  Divide(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  Divide(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     const copy = Vector.Copy(this);
     copy.x /= vv.x;
     copy.y /= vv.y;
@@ -171,8 +209,11 @@ export class Vector implements VectorObject {
    * @param {undefined|number} z 
    * @returns new Vector
    */
-  Mul(v: VectorObject|number, y = 0, z = 0) {
-    const vv = Vector.toVector(v, y, z);
+  Mul(v: VectorObject|number, y?: number, z?: number) {
+    const vv = Vector.toVector(v);
+    if (y !== undefined) vv.y = y;
+    if (z !== undefined) vv.z = z;
+
     const copy = Vector.Copy(this);
     copy.x *= vv.x;
     copy.y *= vv.y;
@@ -292,7 +333,7 @@ export class Vector implements VectorObject {
   }
 
   // basic functions
-  static toVector(v: VectorObject|number, y = 0, z = 0) {
+  static toVector(v: VectorObject|number, y?:number, z?:number) {
     if (typeof v === "number") 
     {
       return new Vector(v, y ?? v, z ?? v);
