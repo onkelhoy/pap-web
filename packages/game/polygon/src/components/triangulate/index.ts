@@ -1,3 +1,3 @@
 // exports
-export * from "./component";
+export * as EarClipping from "./ear-clipping";
 export * from "./types";

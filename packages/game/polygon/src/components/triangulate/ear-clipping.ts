@@ -13,7 +13,7 @@ export function Triangulate(polygon:SimplePolygonObject) {
   }
 
   while (indexlist.length > 3) {
-    const startinglenght = indexlist.length;
+    const startinglength = indexlist.length;
 
     for (let i=0; i<indexlist.length; i++)
     {
@@ -29,9 +29,7 @@ export function Triangulate(polygon:SimplePolygonObject) {
       const va_to_vc = Vector.Subtract(vc, va);
 
       // check if convex
-      if (Vector.Cross(va_to_vb, va_to_vc).z > 0)
-      {
-        console.log('convex');
+      if (Vector.Cross(va_to_vb, va_to_vc).z > -1e-10) {
         continue;
       }
 
@@ -60,8 +58,9 @@ export function Triangulate(polygon:SimplePolygonObject) {
       }
     }
 
-    if (startinglenght === indexlist.length)
+    if (startinglength === indexlist.length)
     {
+      polygon.triangles = triangles;
       return [false, "no further triangle could be established"];
     }
   }
