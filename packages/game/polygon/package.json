@@ -36,7 +36,7 @@
   "dependencies": {
     "@papit/core": "^0.0.2",
     "@papit/game-intersection": "0.0.1",
-    "@papit/game-shape": "^0.0.0",
+    "@papit/game-shape": "0.0.1",
     "@papit/game-vector": "0.0.1"
   },
   "devDependencies": {
