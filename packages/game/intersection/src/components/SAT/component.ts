@@ -66,12 +66,12 @@ function sat_helper(a:SimplePolygonObject, b:SimplePolygonObject) {
   let depth = Number.MAX_SAFE_INTEGER;
   let axis = Vector.Zero;
 
-  for (let i=0; i<a.verticies.length; i++) 
+  for (let i=0; i<a.vertices.length; i++) 
   {
-    const localaxis = Vector.Perpendicular(a.verticies[i], a.verticies[(i+1) % a.verticies.length]).normalise();
+    const localaxis = Vector.Perpendicular(a.vertices[i], a.vertices[(i+1) % a.vertices.length]).normalise();
     
-    const [mina, maxa] = sat_project(a.verticies, localaxis);
-    const [minb, maxb] = sat_project(b.verticies, localaxis);
+    const [mina, maxa] = sat_project(a.vertices, localaxis);
+    const [minb, maxb] = sat_project(b.vertices, localaxis);
 
     if (mina >= maxb || minb >= maxa) return false;
 
@@ -85,10 +85,10 @@ function sat_helper(a:SimplePolygonObject, b:SimplePolygonObject) {
 
   return {axis, depth};
 }
-function sat_project(verticies:VectorObject[], axis:VectorObject) {
+function sat_project(vertices:VectorObject[], axis:VectorObject) {
   let min = Number.MAX_SAFE_INTEGER;
   let max = Number.MIN_SAFE_INTEGER;
-  for (const v of verticies) 
+  for (const v of vertices) 
   {
     const projection = Vector.Dot(v, axis);
     if (projection < min) min = projection;
@@ -102,11 +102,11 @@ function sat_project(verticies:VectorObject[], axis:VectorObject) {
 //#region SAT concave convex
 function sat_concave_convex(a:PolygonObject, b:PolygonObject, direction:VectorObject)
 {
-  const ta: SimplePolygonObject = {verticies: [], triangles: []};
+  const ta: SimplePolygonObject = {vertices: [], triangles: []};
 
   for (let i=0; i<a.triangles.length/3; i++)
   {
-    ta.verticies = a.getTriangle(i);
+    ta.vertices = a.getTriangle(i);
 
     const intersectioninfo = sat_convex_convex(ta, b, direction);
     if (intersectioninfo)
@@ -120,16 +120,16 @@ function sat_concave_convex(a:PolygonObject, b:PolygonObject, direction:VectorOb
 //#region SAT concave concave
 function sat_concave_concave(a:PolygonObject, b:PolygonObject, direction:VectorObject)
 {
-  const ta: SimplePolygonObject = {verticies:[], triangles: []};
-  const tb: SimplePolygonObject = {verticies:[], triangles: []};
+  const ta: SimplePolygonObject = {vertices:[], triangles: []};
+  const tb: SimplePolygonObject = {vertices:[], triangles: []};
 
   for (let i=0; i<a.triangles.length/3; i++)
   {
-    ta.verticies = a.getTriangle(i);
+    ta.vertices = a.getTriangle(i);
 
     for (let j=0; j<b.triangles.length/3; j++)
     {
-      tb.verticies = b.getTriangle(j);
+      tb.vertices = b.getTriangle(j);
 
       const intersectioninfo = sat_convex_convex(ta, tb, direction);
       if (intersectioninfo)

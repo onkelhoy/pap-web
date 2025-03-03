@@ -10,7 +10,7 @@ export type CircleObject = VectorObject & {
 }
 
 export interface PolygonObject {
-  verticies: VectorObject[];
+  vertices: VectorObject[];
   triangles: number[];
   boundaryindex: null|number[];
   concave?: boolean;
@@ -23,7 +23,7 @@ export interface PolygonObject {
   getTriangle(i:number): VectorObject[];
 }
 export type SimplePolygonObject = {
-  verticies: VectorObject[];
+  vertices: VectorObject[];
   triangles: number[];
 }
 

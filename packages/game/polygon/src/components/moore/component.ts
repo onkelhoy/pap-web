@@ -113,16 +113,16 @@ export function Generate(ctx:CanvasRenderingContext2D, width:number, height: num
       if (found) continue;
 
       // Found a new shape, start tracing
-      const verticies:Array<Point> = [];
+      const vertices:Array<Point> = [];
       let currentPoint = toPoint(x, y);
       let previousPoint: Point|null = null;
       let previousDirection = 4; // Start by looking to the left
 
       do {
-        if (canAdd(previousPoint, currentPoint, verticies, distanceThreshold, angleThreshold)) 
+        if (canAdd(previousPoint, currentPoint, vertices, distanceThreshold, angleThreshold)) 
         {
-          if (previousPoint) verticies.push(previousPoint);
-          else verticies.push(currentPoint);
+          if (previousPoint) vertices.push(previousPoint);
+          else vertices.push(currentPoint);
         }
 
         visited[currentPoint.key] = true;
@@ -151,8 +151,8 @@ export function Generate(ctx:CanvasRenderingContext2D, width:number, height: num
 
       } while (currentPoint.key !== point.key);
 
-      const polygon = new Polygon(...verticies);
-      if (polygon.verticies.length > 2)
+      const polygon = new Polygon(...vertices);
+      if (polygon.vertices.length > 2)
       {
         polygons.push(polygon);
       }
@@ -351,7 +351,7 @@ export function Generate(ctx:CanvasRenderingContext2D, width:number, height: num
 // }
 // function getPolygon(x:number, y:number, imageData: ImageData) {
 //   const start = toPoint(x, y);
-//   const verticies = [start];
+//   const vertices = [start];
 
 //   let current = start;
 //   let prev = toPoint(start.x - 1, start.y);
@@ -365,7 +365,7 @@ export function Generate(ctx:CanvasRenderingContext2D, width:number, height: num
 //     current = vertex.current;
 //     prev = vertex.prev;
 
-//     verticies.push(current);
+//     vertices.push(current);
 //     counter++;
 //     if (counter > 100) {
 //       console.log('error', vertex);
@@ -373,5 +373,5 @@ export function Generate(ctx:CanvasRenderingContext2D, width:number, height: num
 //     }
 //   }
 //   while (start.key !== current.key);
-//   return new Polygon(...verticies);
+//   return new Polygon(...vertices);
 // }

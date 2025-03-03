@@ -4,6 +4,7 @@ body {
   background-image: radial-gradient(circle at 50% 50%, rgb(132, 132, 132) 1px, transparent 0);
   background-size: 20px 20px;
   display: flex;
+  flex-direction: column;
   height: 100vh;
   gap: 1rem;
   justify-content: center;
