@@ -2,8 +2,9 @@ import {Vector, VectorObject} from "@papit/game-vector";
 import { debounce } from "@papit/core";
 
 // local
-import {Triangulate} from "./components/triangulate";
+import {EarClipping} from "./components/triangulate";
 import { Generate } from "./components/moore"
+import { Pivot } from "./types";
 export class Polygon {
 
   static instances = 0;
@@ -36,6 +37,8 @@ export class Polygon {
     if (!this.boundaryindex) {
       throw new Error("polygon has no boundary-index, attempt of recalucating has been made but no success");
     }
+
+    if (this.boundaryindex.length < 3) return {x:0, y:0, w: 0, h: 0}
 
     return {
       x: this.verticies[this.boundaryindex[0]].x,
@@ -77,19 +80,52 @@ export class Polygon {
     return this.centeroffset.Add(this.verticies[0]);
   }
 
-  private debouncedmove(x:number|VectorObject, y?:number) { }
+  private getPivot(pivot: Pivot = "center-center") {
+    let pivotPoint:Vector = Vector.Zero;
+    switch (pivot) {
+      case "top-left":
+        pivotPoint.x = this.boundary.x;
+        pivotPoint.y = this.boundary.y;
+        break;
+      case "top-center":
+        pivotPoint.x = this.center.x;
+        pivotPoint.y = this.boundary.y;
+        break;
+      case "top-right":
+        pivotPoint.x = this.boundary.x + this.boundary.w;
+        pivotPoint.y = this.boundary.y;
+        break;
 
-  move(x:number|VectorObject, y?:number) {
-    const pos = Vector.toVector(x, y);
-    const center = this.center;
-    const d = pos.Sub(center);
+      case "center-left":
+        pivotPoint.x = this.boundary.x;
+        pivotPoint.y = this.center.y;
+        break;
+      case "center-center":
+        pivotPoint = this.center;
+        break;
+      case "center-right":
+        pivotPoint.x = this.boundary.x + this.boundary.w;
+        pivotPoint.y = this.center.y;
+        break;
 
-    for (let v of this.verticies)
-    {
-      v.x += d.x;
-      v.y += d.y;
+      case "bottom-left":
+        pivotPoint.x = this.boundary.x;
+        pivotPoint.y = this.boundary.y + this.boundary.h;
+        break;
+      case "bottom-center":
+        pivotPoint.x = this.center.x;
+        pivotPoint.y = this.boundary.y + this.boundary.h;
+        break;
+      case "bottom-right":
+        pivotPoint.x = this.boundary.x + this.boundary.w;
+        pivotPoint.y = this.boundary.y + this.boundary.h;
+        break;
     }
+
+    return pivotPoint;
   }
+
+  private debouncedmove(x:number|VectorObject, y?:number) { }
 
   add(x:number|VectorObject, y?:number) {
     const pos = Vector.toVector(x, y);
@@ -100,17 +136,30 @@ export class Polygon {
     }
   }
 
-  scale(factor:number) {
-    const center = this.center;
+  move(x:number|VectorObject, y?:number, pivot: Pivot = "center-center") {
+    const pos = Vector.toVector(x, y);
+    const pivotPoint = this.getPivot(pivot);
+    const d = pos.Sub(pivotPoint);
+
     for (let v of this.verticies)
     {
-      const delta = center.Sub(v);
+      v.x += d.x;
+      v.y += d.y;
+    }
+  }
+
+  scale(factor:number, pivot: Pivot = "center-center") {
+    const pivotPoint = this.getPivot(pivot);
+
+    for (let v of this.verticies)
+    {
+      const delta = pivotPoint.Sub(v);
       const mag = delta.magnitude;
       const angle = delta.angle;
       const d = mag * factor;
 
-      v.x = center.x + Math.cos(angle) * d;
-      v.y = center.y + Math.sin(angle) * d;
+      v.x = pivotPoint.x - Math.cos(angle) * d;
+      v.y = pivotPoint.y - Math.sin(angle) * d;
     }
   }
 
@@ -216,11 +265,12 @@ export class Polygon {
     this.centeroffset.sub(this.verticies[0]);
 
     // call triangulation
-    this.triangulate();
+    const info = this.triangulate();
+    return info;
   }
 
   triangulate() {
-    Triangulate(this);
+    return EarClipping.Triangulate(this);
   }
 
   getTriangle(i:number) {
@@ -303,7 +353,7 @@ export class Polygon {
     }
   }
 
-  static Moore (ctx:CanvasRenderingContext2D, width:number, height: number, noholes = true) {
-    return Generate(ctx, width, height);
+  static Moore (ctx:CanvasRenderingContext2D, width:number, height: number, holes = false, distanceThreshold?: number, angleThreshold?: number) {
+    return Generate(ctx, width, height, holes, distanceThreshold, angleThreshold);
   }
 }
