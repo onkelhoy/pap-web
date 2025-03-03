@@ -23,6 +23,7 @@ import {
 export class Engine {
 
   info: Array<InfoType> = [];
+  scope: number = 0;
   
   // init with the default canvas size
   canvasToDisplaySizeMap:Map<HTMLCanvasElement, [number, number]> = new Map();
@@ -137,25 +138,16 @@ export class Engine {
           
           // we return another proxy based on the found info 
           // so if we call like in our example above with ".ctx" we can now also serve the ctx 
-          return new Proxy(info, {
+          return new Proxy(target, {
             get: (target, propertyKey) => {
-              if (Reflect.has(target, propertyKey)) return Reflect.get(target, propertyKey);
-
-              // not something from base info object we might try to serve the standards 
-              switch (propertyKey) {
-                case "canvas":
-                case "element":
-                  return this.getCanvas(i);
-                case "setting":
-                  return this.getSetting(i);
-                case "context":
-                case "ctx":
-                  return this.getContext(i);
-                case "gl":
-                  return this.getContext<WebGL2RenderingContext>(i);
-                case "gl1":
-                  return this.getContext<WebGLRenderingContext>(i);
+              if (Reflect.has(target, propertyKey)) {
+                target.scope = i;
+                const ret = Reflect.get(target, propertyKey);
+                target.scope = 0;
+                return ret;
               }
+
+              if (Reflect.get(info, propertyKey)) return Reflect.get(info, propertyKey);
             }
           });
         }
@@ -190,25 +182,25 @@ export class Engine {
   }
 
   get canvas () {
-    return this.getCanvas(0);
+    return this.getCanvas();
   }
   get element () {
-    return this.getCanvas(0);
+    return this.getCanvas();
   }
   get setting() {
-    return this.getSetting(0);
+    return this.getSetting();
   }
   get context() {
-    return this.getContext(0);
+    return this.getContext();
   }
   get ctx() {
-    return this.getContext(0);
+    return this.getContext();
   }
   get gl() {
-    return this.getContext<WebGL2RenderingContext>(0);
+    return this.getContext<WebGL2RenderingContext>();
   }
   get gl1() {
-    return this.getContext<WebGLRenderingContext>(0);
+    return this.getContext<WebGLRenderingContext>();
   }
 
   get width () {
@@ -218,20 +210,23 @@ export class Engine {
     return this.canvas.height;
   }
 
-  getSetting(index:number) {
-    return this.info[index]?.setting;
+  getIndex(index?: number) {
+    return index ?? this.scope;
   }
-  getContext<T = CanvasRenderingContext2D>(index:number) {
-    return this.info[index]?.context as T;
+  getSetting(index?:number) {
+    return this.info[this.getIndex(index)]?.setting;
   }
-  getElement(index:number) {
-    return this.info[index]?.element;
+  getContext<T = CanvasRenderingContext2D>(index?:number) {
+    return this.info[this.getIndex(index)]?.context as T;
   }
-  getCanvas(index:number) { // this is mostly there as I'd probably forget about element : but element makes more sense as a name
-    return this.info[index]?.element;
+  getElement(index?:number) {
+    return this.info[this.getIndex(index)]?.element;
+  }
+  getCanvas(index?:number) { // this is mostly there as I'd probably forget about element : but element makes more sense as a name
+    return this.info[this.getIndex(index)]?.element;
   }
 
-  loop(callback:SettingCallback, index = 0) {
+  loop(callback:SettingCallback, index?:number) {
     const setting = this.getSetting(index);
     setting.state = "running";
 
@@ -256,7 +251,7 @@ export class Engine {
 
     loopfunction();
   }
-  stop(index:number = 0) {
+  stop(index?:number) {
     const setting = this.getSetting(index);
     if (setting) {
       setting.state = "paused"
@@ -264,7 +259,7 @@ export class Engine {
   }
 
   // CRED: https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-  resizeCanvasToDisplaySize(index:number = 0) {
+  resizeCanvasToDisplaySize(index?:number) {
     const context = this.getContext(index);
     if (!context) {
       console.error("could not find context");
@@ -279,18 +274,15 @@ export class Engine {
     }
 
     const [displayWidth, displayHeight] = data;
-  
+    
     // Check if the canvas is not the same size.
-    const needResize = canvas.width  !== displayWidth ||
-                      canvas.height !== displayHeight;
+    const needResize = canvas.width  !== displayWidth || canvas.height !== displayHeight;
+    console.log({msg: "why",displayWidth, displayHeight, cw:canvas.width, ch:canvas.height, needResize, index: this.getIndex(index) })
   
     if (needResize) {
       // Make the canvas the same size
       canvas.width  = displayWidth;
       canvas.height = displayHeight;
-
-      // dangerous call in case this is executed multiple times - should do it in a debounce 
-      // canvas.dispatchEvent(new Event("needs-resize"));
     }
   
     return needResize;
@@ -304,8 +296,8 @@ export class Engine {
    * @param index number - used to locate which context (defaults to first)
    * @returns true
    */
-  deleteProgram(name:string, index:number = 0) {
-    const info = this.info[index];
+  deleteProgram(name:string, index?:number) {
+    const info = this.info[this.getIndex(index)];
     if (info == null) throw new Error("info not found");
     if (info.type !== "webgl") throw new Error("context is not WebGL: " + info.setting.type);
     const program = info.programs.get(name as string);
@@ -321,7 +313,7 @@ export class Engine {
    * @param index number - used to locate which context (defaults to first)
    * @returns true | null
    */
-  deleteProgramSafe(name:string, index:number = 0) {
+  deleteProgramSafe(name:string, index?:number) {
     try {
       return this.deleteProgram(name, index);
     }
@@ -339,8 +331,8 @@ export class Engine {
    * @param index number used to locate which context (defaults to first)
    * @returns WebGLProgram
    */
-  async createProgram(name: string, vertex: ShaderSource, fragment: ShaderSource, index:number = 0) {
-    const info = this.info[index];
+  async createProgram(name: string, vertex: ShaderSource, fragment: ShaderSource, index?:number) {
+    const info = this.info[this.getIndex(index)];
     if (info == null) throw new Error("info not found");
     if (info.type !== "webgl") throw new Error("context is not WebGL: " + info.setting.type);
     if (info.programs.has(name)) throw new Error("program with this name already exist: " + name)
@@ -378,7 +370,7 @@ export class Engine {
    * @param index number used to locate which context (defaults to first)
    * @returns WebGLProgram | null
    */
-  async createProgramSafe(name: string, vertex: ShaderSource, fragment: ShaderSource, index:number = 0) {
+  async createProgramSafe(name: string, vertex: ShaderSource, fragment: ShaderSource, index?:number) {
     try {
       return this.createProgram(name, vertex, fragment, index);
     }
@@ -448,8 +440,8 @@ export class Engine {
    * @param name string name of the program 
    * @param index number used to locate which context (defaults to first)
    */
-  useProgram(name:string, index:number) {
-    const info = this.info[index];
+  useProgram(name:string, index?:number) {
+    const info = this.info[this.getIndex(index)];
     if (info == null) throw new Error("info not found");
     if (info.type !== "webgl") throw new Error("context is not WebGL: " + info.setting.type);
     const program = info.programs.get(name as string);
@@ -465,7 +457,7 @@ export class Engine {
    * @param index number used to locate which context (defaults to first)
    * @returns boolean state if success (true) or error
    */
-  useProgramSafe(name:string, index:number) {
+  useProgramSafe(name:string, index?:number) {
     try {
       this.useProgram(name, index);
       return true;
