@@ -7,24 +7,23 @@ import {Pixel, Point} from "./types";
 import {Polygon} from "../../component";
 
 //#region utility functions
-const DISTANCE_THRESHOLD = 2;
-// const ANGLE_THRESHOLD = 0.0001;
-function canAdd(a:VectorObject, b:VectorObject) {
-  const distance = Vector.Distance(a, b);
-  if (distance < DISTANCE_THRESHOLD) return false;
+const DISTANCE_THRESHOLD = 4;
+const ANGLE_THRESHOLD = 0.0001;
+function canAdd(prev: VectorObject|null, point:VectorObject, points:VectorObject[], distanceThreshold = DISTANCE_THRESHOLD, angleThreshold = ANGLE_THRESHOLD) {
+  if (prev === null) return true;
 
-  // const AB = Vector.Subtract(a, b);
-  // const BC = Vector.Subtract(b, c);
+  const fixedpoint = points[points.length - 1];
+  const distance = Vector.Distance(fixedpoint, prev);
+  if (distance < distanceThreshold) return false;
 
-  // const dot = AB.dot(BC);
-  // const mag1 = AB.magnitude;
-  // const mag2 = BC.magnitude;
-
-  // const angle = Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2))));
-
-  // return angle >= ANGLE_THRESHOLD;
-
-  return true;
+  // angle calculation
+  const AB = Vector.Subtract(fixedpoint, prev);
+  const BC = Vector.Subtract(prev, point);
+  const dot = AB.dot(BC);
+  const mag1 = AB.magnitude;
+  const mag2 = BC.magnitude;
+  const angle = Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2))));
+  return angle >= angleThreshold;
 }
 function isEmpty(pixel:Pixel) {
   if (pixel.outofbounds) return true;
@@ -78,7 +77,7 @@ function isEdge(point:Point, imageData:ImageData) {
 }
 //#endregion
 
-export function Generate(ctx:CanvasRenderingContext2D, width:number, height: number, holes = false) {
+export function Generate(ctx:CanvasRenderingContext2D, width:number, height: number, holes = false, distanceThreshold = DISTANCE_THRESHOLD, angleThreshold = ANGLE_THRESHOLD) {
   const imageData = ctx.getImageData(0, 0, width, height);
 
   // Directions for 8-connected neighbors (clockwise order)
@@ -114,16 +113,16 @@ export function Generate(ctx:CanvasRenderingContext2D, width:number, height: num
       if (found) continue;
 
       // Found a new shape, start tracing
-      const contour:Array<Point> = [];
+      const verticies:Array<Point> = [];
       let currentPoint = toPoint(x, y);
-      let previousPoint:Point|null = null;
+      let previousPoint: Point|null = null;
       let previousDirection = 4; // Start by looking to the left
 
       do {
-        if (!previousPoint || canAdd(previousPoint, currentPoint)) 
+        if (canAdd(previousPoint, currentPoint, verticies, distanceThreshold, angleThreshold)) 
         {
-          previousPoint = currentPoint;
-          contour.push(currentPoint);
+          if (previousPoint) verticies.push(previousPoint);
+          else verticies.push(currentPoint);
         }
 
         visited[currentPoint.key] = true;
@@ -137,7 +136,9 @@ export function Generate(ctx:CanvasRenderingContext2D, width:number, height: num
           const next = toPoint(currentPoint.x + direction.x, currentPoint.y + direction.y);
 
           if (!visited[next.key] && isEdge(next, imageData)) {
+            previousPoint = currentPoint;
             currentPoint = next;
+            
             previousDirection = (directionIndex + 5) % directions.length; // Update direction
             foundNext = true;
             visited[next.key] = true;
@@ -150,16 +151,13 @@ export function Generate(ctx:CanvasRenderingContext2D, width:number, height: num
 
       } while (currentPoint.key !== point.key);
 
-      const polygon = new Polygon(...contour);
+      const polygon = new Polygon(...verticies);
       if (polygon.verticies.length > 2)
       {
-        console.log('polygon add', polygon)
         polygons.push(polygon);
       }
     }
   }
-
-  console.log('#polygons: ', polygons.length)
 
   return polygons;
 }
