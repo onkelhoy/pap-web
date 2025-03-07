@@ -2,7 +2,7 @@
 
 # variables
 package=$(pwd)
-view=${1:-engine}
+# view=${1:-engine}
 
 for arg in "$@"; do
   if [[ $arg == --view=* ]]; then 
